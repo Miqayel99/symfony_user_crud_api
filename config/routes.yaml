@@ -1,3 +1,27 @@
 #index:
 #    path: /
 #    controller: App\Controller\DefaultController::index
+
+user_list:
+  path: /api/v1/users
+  controller: App\Controller\UserController:indexAction
+  methods: [GET]
+
+user_create:
+  path: /api/v1/users
+  controller: App\Controller\UserController:createAction
+  methods: [POST]
+
+user_delete:
+  path: /api/v1/{id}/users
+  controller: App\Controller\UserController:deleteAction
+  methods: [DELETE]
+  requirements:
+    id: '\d+'
+
+user_update:
+  path: /api/v1/{id}/users
+  controller: App\Controller\UserController:updateAction
+  methods: [PATCH]
+  requirements:
+    id: '\d+'
