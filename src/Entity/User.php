@@ -1,176 +1,245 @@
 <?php
-
-declare(strict_types=1);
-
+// src/Entity/User.php
 namespace App\Entity;
 
-
+use App\Repository\UserRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
-use Symfony\Component\Validator\Constraints as Assert;
-use Symfony\Component\Validator\Mapping\ClassMetadata;
 use Symfony\Component\Security\Core\User\UserInterface;
-
-
-
-
-
-
-
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
- * @ORM\Table(name="app_user")
- * @ORM\Entity()
- * @UniqueEntity(
- *      fields={"email"},
- *
- *      message="email is already in use"
- *      )
- *  @UniqueEntity(
- *      fields={"username"},
- *
- *      message="username is already in use"
- *      )
- *
+ * @ORM\Entity(repositoryClass=UserRepository::class)
  */
-class User
+class User implements UserInterface
 {
-
     /**
-     * @var int|null;
+     * @var int $id
      *
-     * @ORM\Column(name="id",type="integer")
      * @ORM\Id()
-     * @ORM\GeneratedValue(strategy="AUTO")
+     * @ORM\GeneratedValue()
+     * @ORM\Column(type="integer")
      */
- private $id;
-    /**
-     * @var string|null;
-     *
-     * @ORM\Column(name="email",type="string", length=100)
-     * @Assert\Email()
-     *
-     */
- private $email;
-    /**
-     * @var string|null;
-     *
-     * @ORM\Column(name="role",type="string" , length=100)
-     *
-     */
-
- private $role;
-    /**
-     * @var string|null;
-     *
-     * @ORM\Column(name="username",type="string" , length=50)
-     */
-
-    private $username;
+    private $id;
 
     /**
-     * @var string|null;
+     * @var string $firstName
      *
-     * @ORM\Column(name="password",type="string" , length=50)
+     * @ORM\Column(name="first_name", type="string", length=255)
      */
+    private $firstName;
 
+    /**
+     * @var string $lastName
+     *
+     * @ORM\Column(name="last_name", type="string", length=255)
+     */
+    private $lastName;
+
+    /**
+     * @var string $email;
+     *
+     * @ORM\Column(name="email", type="string", length=180, unique=true)
+     * @Assert\Email
+     */
+    private $email;
+
+    /**
+     * @var string The hashed password
+     * @ORM\Column(type="string")
+     */
     private $password;
 
-
-    public static function loadValidatorMetadata(ClassMetadata $metadata)
-    {
-
-
-        $metadata->addPropertyConstraint('role', new Assert\Choice([
-            'choices' => ['admin', 'user'],
-            'message' => 'Choose between admin or user roles.',
-        ]));
-        $metadata->addPropertyConstraint('username', new Assert\Length([
-            'min' => 4,
-            'max' => 20,
-            'minMessage' => 'Your username must be at least {{ limit }} characters long',
-            'maxMessage' => 'Your username cannot be longer than {{ limit }} characters',
-        ]));
-        $metadata->addPropertyConstraint('email', new Assert\Email([
-            'message' => 'The email "{{ value }}" is not a valid email.',
-        ]));
-            $metadata->addPropertyConstraint('username', new Assert\Regex([
-                'pattern' => '/^(?![_.])[a-z0-9_.]+(?<![_.])+$/i',
-                'message' => 'username cannot contain uppercase letters, whitespace, symbols except _ .  and cannot start or end with _ .',
-            ]));
-    }
+    /**
+     * @ORM\Column(type="json")
+     */
+    private $roles = [];
 
     /**
-     * @return int|null
+     * @var datetime $createdAt
+     *
+     * @ORM\Column(name="created_at", type="datetime")
      */
-    public function getId(): int
+    protected $createdAt;
+
+    /**
+     * @var datetime $updatedAt
+     *
+     * @ORM\Column(name="updated_at", type="datetime", nullable = true)
+     */
+    protected $updatedAt;
+
+    /**
+     * @ORM\OneToMany(targetEntity=Auth::class, mappedBy="user")
+     */
+    private $user;
+
+    public function __construct()
+    {
+        $this->user = new ArrayCollection();
+    }
+
+    public function getId(): ?int
     {
         return $this->id;
     }
 
+    public function getFirstName(): ?string
+    {
+        return $this->firstName;
+    }
 
-    /**
-     * @return string|null
-     */
+    public function setFirstName(string $firstName): self
+    {
+        $this->firstName = $firstName;
+
+        return $this;
+    }
+
+    public function getLastName(): ?string
+    {
+        return $this->lastName;
+    }
+
+    public function setLastName(string $lastName): self
+    {
+        $this->lastName = $lastName;
+
+        return $this;
+    }
+
     public function getEmail(): ?string
     {
         return $this->email;
     }
 
-    /**
-     * @param string|null $email
-     */
-    public function setEmail(string $email): void
+    public function setEmail(string $email): self
     {
         $this->email = $email;
+
+        return $this;
     }
 
     /**
-     * @return string|null
+     * @see UserInterface
      */
-    public function getRole(): ?string
+    public function getRoles(): array
     {
-        return $this->role;
+        $roles = $this->roles;
+        // guarantee every user at least has ROLE_USER
+        $roles[] = 'ROLE_USER';
+
+        return array_unique($roles);
     }
 
-    /**
-     * @param string|null $role
-     */
-    public function setRole(string $role): void
+    public function setRoles(array $roles): self
     {
-        $this->role = $role;
+        $this->roles = $roles;
+
+        return $this;
     }
 
     /**
-     * @return string|null
+     * Gets triggered only on insert
+     *
+     * @ORM\PrePersist
      */
-    public function getUsername(): ?string
+    public function onPrePersist()
     {
-        return $this->username;
+        $this->createdAt = new \DateTime("now");
     }
 
     /**
-     * @param string|null $username
+     * Gets triggered every time on update
+     *
+     * @ORM\PreUpdate
      */
-    public function setUsername(string $username): void
+    public function onPreUpdate()
     {
-        $this->username = $username;
+        $this->updatedAt = new \DateTime("now");
     }
 
     /**
-     * @return string|null
+     * A visual identifier that represents this user.
+     *
+     * @see UserInterface
      */
-    public function getPassword(): ?string
+    public function getUsername(): string
     {
-        return $this->password;
+        return (string) $this->email;
     }
 
     /**
-     * @param string|null $password
+     * @return Collection|Auth[]
      */
-    public function setPassword(?string $password): void
+    public function getUserId(): Collection
+    {
+        return $this->user_id;
+    }
+
+    /**
+     * @return Collection|Auth[]
+     */
+    public function getUser(): Collection
+    {
+        return $this->user;
+    }
+
+    public function addUser(Auth $user): self
+    {
+        if (!$this->user->contains($user)) {
+            $this->user[] = $user;
+            $user->setUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeUser(Auth $user): self
+    {
+        if ($this->user->removeElement($user)) {
+            // set the owning side to null (unless already changed)
+            if ($user->getUser() === $this) {
+                $user->setUser(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @see UserInterface
+     */
+    public function getPassword(): string
+    {
+        return (string) $this->password;
+    }
+
+    public function setPassword(string $password): self
     {
         $this->password = $password;
+
+        return $this;
     }
 
+    /**
+     * Returning a salt is only needed, if you are not using a modern
+     * hashing algorithm (e.g. bcrypt or sodium) in your security.yaml.
+     *
+     * @see UserInterface
+     */
+    public function getSalt(): ?string
+    {
+        return null;
+    }
+
+    /**
+     * @see UserInterface
+     */
+    public function eraseCredentials()
+    {
+        // If you store any temporary, sensitive data on the user, clear it here
+        // $this->plainPassword = null;
+    }
 }

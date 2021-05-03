@@ -1,27 +1,39 @@
-#index:
-#    path: /
-#    controller: App\Controller\DefaultController::index
+register:
+  path: /register
+  controller: App\Controller\AuthController::register
+  methods: [ POST ]
 
-user_list:
-  path: /api/v1/users
-  controller: App\Controller\UserController:indexAction
-  methods: [GET]
+api:
+  path: /api
+  controller: App\Controller\AuthController::api
 
-user_create:
-  path: /api/v1/users
-  controller: App\Controller\UserController:createAction
+create:
+  path: /user/create
+  controller: App\Controller\UserController::create
   methods: [POST]
 
-user_delete:
-  path: /api/v1/{id}/users
-  controller: App\Controller\UserController:deleteAction
-  methods: [DELETE]
-  requirements:
-    id: '\d+'
+delete:
+  path: /user/delete
+  controller: App\Controller\UserController::delete
+  methods: [ POST ]
 
-user_update:
-  path: /api/v1/{id}/users
-  controller: App\Controller\UserController:updateAction
-  methods: [PATCH]
+edite:
+  path: /user/edite
+  controller: App\Controller\UserController::edite
+  methods: [ POST ]
+
+view:
+  path: /user/view/{email}
+  controller: App\Controller\UserController::view
+  methods: [ GET ]
+
+app:
+  path: /{params}
+  controller: App\Controller\DefaultController::index
   requirements:
-    id: '\d+'
+    params: "^(?!admin|api).+"
+
+api_login_check:
+  path: /api/login_check
+  controller: App\Controller\AuthController::login
+  methods: [ POST ]

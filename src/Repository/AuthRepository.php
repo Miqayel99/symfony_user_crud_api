@@ -19,10 +19,10 @@ class AuthRepository extends ServiceEntityRepository
         parent::__construct($registry, Auth::class);
     }
 
-    // /**
-    //  * @return Auth[] Returns an array of Auth objects
-    //  */
-    /*
+     /**
+      * @return Auth[] Returns an array of Auth objects
+      */
+
     public function findByExampleField($value)
     {
         return $this->createQueryBuilder('a')
@@ -34,9 +34,9 @@ class AuthRepository extends ServiceEntityRepository
             ->getResult()
         ;
     }
-    */
 
-    /*
+
+
     public function findOneBySomeField($value): ?Auth
     {
         return $this->createQueryBuilder('a')
@@ -46,5 +46,5 @@ class AuthRepository extends ServiceEntityRepository
             ->getOneOrNullResult()
         ;
     }
-    */
+
 }
